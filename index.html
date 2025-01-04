@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora MercadoLibre</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #333;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+        .results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .result-item {
+            margin-bottom: 15px;
+        }
+        .result-value {
+            font-size: 18px;
+            font-weight: 500;
+            color: #0066cc;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .explanation {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Precios MercadoLibre</h1>
+        <div class="grid">
+            <div class="inputs">
+                <div class="input-group">
+                    <label>Costo del producto</label>
+                    <input type="number" id="costo" value="10000">
+                </div>
+                <div class="input-group">
+                    <label>Comisión ML (%)</label>
+                    <input type="number" id="comisionML" value="16" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>Eikos - Publicidad (%)</label>
+                    <input type="number" id="eikos" value="11" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>IIBB (%)</label>
+                    <input type="number" id="iibb" value="5" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>IVA efectivo (%)</label>
+                    <input type="number" id="ivaEfectivo" value="16" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>Merma (%)</label>
+                    <input type="number" id="merma" value="2" step="0.1">
+                </div>
+                <div class="input-group">
+                    <label>Margen deseado (%)</label>
+                    <input type="number" id="margenDeseado" value="30" step="0.1">
+                </div>
+            </div>
+            <div class="results">
+                <h3>Resultados</h3>
+                <div class="result-item">
+                    <label>Suma de porcentajes</label>
+                    <div id="sumaPorcentajes" class="result-value">0%</div>
+                </div>
+                <div class="result-item">
+                    <label>Precio de quiebre (ganancia = 0)</label>
+                    <div id="precioQuiebre" class="result-value">$0</div>
+                </div>
+                <div class="result-item">
+                    <label>Precio con margen deseado</label>
+                    <div id="precioConMargen" class="result-value">$0</div>
+                </div>
+                <div class="explanation">
+                    <p id="explicacionQuiebre"></p>
+                    <p id="explicacionMargen"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function formatPrice(number) {
+            return new Intl.NumberFormat('es-AR', {
+                style: 'currency',
+                currency: 'ARS'
+            }).format(number);
+        }
+
+        function formatPercent(number) {
+            return new Intl.NumberFormat('es-AR', {
+                style: 'percent',
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }).format(number);
+        }
+
+        function calcular() {
+            const costo = parseFloat(document.getElementById('costo').value) || 0;
+            const comisionML = parseFloat(document.getElementById('comisionML').value) / 100 || 0;
+            const eikos = parseFloat(document.getElementById('eikos').value) / 100 || 0;
+            const iibb = parseFloat(document.getElementById('iibb').value) / 100 || 0;
+            const ivaEfectivo = parseFloat(document.getElementById('ivaEfectivo').value) / 100 || 0;
+            const merma = parseFloat(document.getElementById('merma').value) / 100 || 0;
+            const margenDeseado = parseFloat(document.getElementById('margenDeseado').value) / 100 || 0;
+
+            const sumaPorcentajes = comisionML + eikos + iibb + ivaEfectivo + merma;
+            const precioQuiebre = costo / (1 - sumaPorcentajes);
+            const precioConMargen = costo * (1 + margenDeseado) / (1 - sumaPorcentajes);
+
+            document.getElementById('sumaPorcentajes').textContent = formatPercent(sumaPorcentajes);
+            document.getElementById('precioQuiebre').textContent = formatPrice(precioQuiebre);
+            document.getElementById('precioConMargen').textContent = formatPrice(precioConMargen);
+
+            document.getElementById('explicacionQuiebre').textContent = 
+                `Por debajo del precio de quiebre (${formatPrice(precioQuiebre)}), estarías perdiendo dinero.`;
+            document.getElementById('explicacionMargen').textContent = 
+                `Para lograr un margen del ${formatPercent(margenDeseado)} sobre el costo, necesitás vender a ${formatPrice(precioConMargen)}.`;
+        }
+
+        // Agregar event listeners a todos los inputs
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', calcular);
+        });
+
+        // Calcular inicialmente
+        calcular();
+    </script>
+</body>
+</html>
